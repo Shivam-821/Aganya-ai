@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useTheme } from "./ThemeProvider";
 import { Moon, Sun, Menu, X } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -44,9 +45,13 @@ export function Navbar() {
       <div className="container mx-auto px-6 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 group">
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-lg shadow-md group-hover:scale-105 transition-transform">
-            A
-          </div>
+          <Image
+            src="/logo.png"
+            alt="Aganya AI Logo"
+            width={32}
+            height={32}
+            className="rounded-lg shadow-md group-hover:scale-105 transition-transform"
+          />
           <span className="text-xl font-bold tracking-tight text-foreground">
             Aganya AI
           </span>

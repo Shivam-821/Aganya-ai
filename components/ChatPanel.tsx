@@ -27,7 +27,10 @@ interface ChatPanelProps {
   onPredictionUpdate?: (prediction: Prediction) => void;
 }
 
-export default function ChatPanel({ reportId, onPredictionUpdate }: ChatPanelProps) {
+export default function ChatPanel({
+  reportId,
+  onPredictionUpdate,
+}: ChatPanelProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -36,15 +39,15 @@ export default function ChatPanel({ reportId, onPredictionUpdate }: ChatPanelPro
 
   const handleSend = async () => {
     if (!input.trim() && !overrideMode) return;
-    
+
     const userMessage: Message = {
       id: Date.now().toString(),
       role: "user",
-      content: overrideMode 
+      content: overrideMode
         ? `Override request: ${JSON.stringify(overrides)}\n${input}`
         : input,
     };
-    
+
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setLoading(true);
@@ -53,7 +56,7 @@ export default function ChatPanel({ reportId, onPredictionUpdate }: ChatPanelPro
       const controller = new AbortController();
       // Longer timeout for AI responses (90s for Gemini + ML model)
       const timeoutId = setTimeout(() => controller.abort(), 90000);
-      
+
       const payload = overrideMode
         ? {
             message: input || "Explain the changes in the forecast",
@@ -101,11 +104,13 @@ export default function ChatPanel({ reportId, onPredictionUpdate }: ChatPanelPro
         setOverrides({});
       }
     } catch (err) {
-      let errorContent = "Failed to connect to the AI assistant. Please try again.";
+      let errorContent =
+        "Failed to connect to the AI assistant. Please try again.";
       if (err instanceof Error && err.name === "AbortError") {
-        errorContent = "The AI is taking longer than expected. Please try a simpler question or try again later.";
+        errorContent =
+          "The AI is taking longer than expected. Please try a simpler question or try again later.";
       }
-      
+
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
@@ -128,7 +133,9 @@ export default function ChatPanel({ reportId, onPredictionUpdate }: ChatPanelPro
         <div className="flex items-center justify-between">
           <div>
             <h3 className="font-medium text-zinc-100">AI Assistant</h3>
-            <p className="text-xs text-zinc-500">Ask questions or modify the forecast</p>
+            <p className="text-xs text-zinc-500">
+              Ask questions or modify the forecast
+            </p>
           </div>
           <button
             onClick={() => setOverrideMode(!overrideMode)}
@@ -152,10 +159,16 @@ export default function ChatPanel({ reportId, onPredictionUpdate }: ChatPanelPro
           <div className="grid grid-cols-2 gap-3">
             {[
               { key: "unit_price", label: "Unit Price", placeholder: "4500" },
-              { key: "current_inventory", label: "Inventory", placeholder: "50" },
+              {
+                key: "current_inventory",
+                label: "Inventory",
+                placeholder: "50",
+              },
             ].map(({ key, label, placeholder }) => (
               <div key={key}>
-                <label className="block text-xs text-zinc-400 mb-1">{label}</label>
+                <label className="block text-xs text-zinc-400 mb-1">
+                  {label}
+                </label>
                 <input
                   type="number"
                   value={overrides[key] || ""}
@@ -172,37 +185,52 @@ export default function ChatPanel({ reportId, onPredictionUpdate }: ChatPanelPro
       )}
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-[200px] max-h-[400px]">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-50 max-h-100">
         {messages.length === 0 ? (
           <div className="text-center py-8">
             <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-zinc-800/50 flex items-center justify-center">
-              <svg className="w-6 h-6 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              <svg
+                className="w-6 h-6 text-zinc-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                />
               </svg>
             </div>
             <p className="text-sm text-zinc-500">
-              Ask questions about this forecast or use Override Mode to modify parameters
+              Ask questions about this forecast or use Override Mode to modify
+              parameters
             </p>
           </div>
         ) : (
           messages.map((msg) => (
             <div
               key={msg.id}
-              className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+              className={`flex ${
+                msg.role === "user" ? "justify-end" : "justify-start"
+              }`}
             >
               <div
                 className={`max-w-[85%] rounded-xl px-4 py-3 ${
                   msg.role === "user"
-                    ? "bg-indigo-600 text-white"
+                    ? "bg-teal-500 text-white"
                     : "bg-zinc-800 text-zinc-100"
                 }`}
               >
                 <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
-                
+
                 {/* Modified prediction display */}
                 {msg.modifiedPrediction && (
                   <div className="mt-3 pt-3 border-t border-zinc-700/50">
-                    <p className="text-xs text-emerald-400 mb-2">New Prediction:</p>
+                    <p className="text-xs text-emerald-400 mb-2">
+                      New Prediction:
+                    </p>
                     <div className="grid grid-cols-2 gap-2 text-xs">
                       <div>
                         <span className="text-zinc-400">Sales:</span>{" "}
@@ -213,7 +241,8 @@ export default function ChatPanel({ reportId, onPredictionUpdate }: ChatPanelPro
                       <div>
                         <span className="text-zinc-400">Revenue:</span>{" "}
                         <span className="text-emerald-400 font-medium">
-                          ₹{msg.modifiedPrediction.projected_revenue.toLocaleString()}
+                          ₹
+                          {msg.modifiedPrediction.projected_revenue.toLocaleString()}
                         </span>
                       </div>
                     </div>
@@ -223,7 +252,7 @@ export default function ChatPanel({ reportId, onPredictionUpdate }: ChatPanelPro
             </div>
           ))
         )}
-        
+
         {loading && (
           <div className="flex justify-start">
             <div className="bg-zinc-800 rounded-xl px-4 py-3">
@@ -245,21 +274,35 @@ export default function ChatPanel({ reportId, onPredictionUpdate }: ChatPanelPro
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
-            placeholder={overrideMode ? "Explain the changes..." : "Ask about this forecast..."}
+            placeholder={
+              overrideMode
+                ? "Explain the changes..."
+                : "Ask about this forecast..."
+            }
             disabled={loading}
             className="flex-1 px-4 py-2.5 bg-zinc-900/50 border border-zinc-800 rounded-xl
                      text-zinc-100 placeholder-zinc-600 text-sm
-                     focus:outline-none focus:ring-2 focus:ring-indigo-500/50
+                     focus:outline-none focus:ring-2 focus:ring-teal-500/50
                      disabled:opacity-50"
           />
           <button
             onClick={handleSend}
             disabled={loading || (!input.trim() && !overrideMode)}
-            className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-600/50
+            className="px-4 py-2.5 bg-teal-500 hover:bg-teal-400 disabled:bg-teal-500/50
                      text-white rounded-xl transition-colors"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+              />
             </svg>
           </button>
         </div>

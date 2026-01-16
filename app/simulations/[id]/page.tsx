@@ -378,15 +378,15 @@ export default function SimulationDetailPage() {
             <h3 className="font-medium text-foreground mb-4">Policy Impact</h3>
             <div className="space-y-3">
               {/* Repo Rate */}
-              <div className="bg-indigo-500/5 border border-indigo-500/20 rounded-xl overflow-hidden">
+              <div className="bg-teal-500/5 border border-teal-500/20 rounded-xl overflow-hidden">
                 <button
                   onClick={() => toggleCard("repo")}
-                  className="w-full p-4 flex items-center justify-between text-left hover:bg-indigo-500/5 transition-colors"
+                  className="w-full p-4 flex items-center justify-between text-left hover:bg-teal-500/5 transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-lg bg-teal-500/10 flex items-center justify-center">
                       <svg
-                        className="w-4 h-4 text-indigo-400"
+                        className="w-4 h-4 text-teal-400"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -403,7 +403,7 @@ export default function SimulationDetailPage() {
                       <div className="text-zinc-400 text-sm">
                         RBI Repo Rate Effect
                       </div>
-                      <div className="text-indigo-400 font-medium">
+                      <div className="text-teal-400 font-medium">
                         {report.output.policy_impact.repo_rate_effect}
                       </div>
                     </div>

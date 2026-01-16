@@ -506,7 +506,7 @@ export default function Dashboard() {
                     yAxisId="left"
                     type="monotone"
                     dataKey="Sales_Qty"
-                    stroke="#8884d8"
+                    stroke="#14b8a6"
                     name="Sales"
                     strokeWidth={3}
                     dot={false}
@@ -554,7 +554,7 @@ export default function Dashboard() {
                             "#00C49F",
                             "#FFBB28",
                             "#FF8042",
-                            "#8884d8",
+                            "#0d9488",
                             "#ff7300",
                           ][index % 6]
                         }

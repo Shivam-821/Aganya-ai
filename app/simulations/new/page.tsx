@@ -44,6 +44,24 @@ export default function NewSimulationPage() {
         current_inventory: parseInt(formData.current_inventory),
       };
 
+      // #region agent log
+      fetch(
+        "http://127.0.0.1:7243/ingest/fb5f8066-a7b3-41e4-a85d-332644014073",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            location: "new/page.tsx:submit",
+            message: "Sending request",
+            data: { api_url: API_URL, payload },
+            timestamp: Date.now(),
+            sessionId: "debug-session",
+            hypothesisId: "F",
+          }),
+        }
+      ).catch(() => {});
+      // #endregion
+
       const res = await fetch(`${API_URL}/reports`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -53,7 +71,47 @@ export default function NewSimulationPage() {
       });
       clearTimeout(timeoutId);
 
+      // #region agent log
+      fetch(
+        "http://127.0.0.1:7243/ingest/fb5f8066-a7b3-41e4-a85d-332644014073",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            location: "new/page.tsx:response",
+            message: "Got response",
+            data: { status: res.status, ok: res.ok },
+            timestamp: Date.now(),
+            sessionId: "debug-session",
+            hypothesisId: "F",
+          }),
+        }
+      ).catch(() => {});
+      // #endregion
+
       const data = await res.json();
+
+      // #region agent log
+      fetch(
+        "http://127.0.0.1:7243/ingest/fb5f8066-a7b3-41e4-a85d-332644014073",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            location: "new/page.tsx:data",
+            message: "Parsed JSON",
+            data: {
+              success: data.success,
+              hasData: !!data.data,
+              error: data.error,
+            },
+            timestamp: Date.now(),
+            sessionId: "debug-session",
+            hypothesisId: "F",
+          }),
+        }
+      ).catch(() => {});
+      // #endregion
 
       if (data.success) {
         router.push(`/simulations/${data.data.id}`);
@@ -61,6 +119,26 @@ export default function NewSimulationPage() {
         setError(data.error || "Failed to create simulation");
       }
     } catch (err) {
+      // #region agent log
+      fetch(
+        "http://127.0.0.1:7243/ingest/fb5f8066-a7b3-41e4-a85d-332644014073",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            location: "new/page.tsx:catch",
+            message: "Request failed",
+            data: {
+              error: err instanceof Error ? err.message : String(err),
+              name: err instanceof Error ? err.name : "unknown",
+            },
+            timestamp: Date.now(),
+            sessionId: "debug-session",
+            hypothesisId: "F",
+          }),
+        }
+      ).catch(() => {});
+      // #endregion
       if (err instanceof Error && err.name === "AbortError") {
         setError(
           "Request timed out. The prediction is taking longer than expected."
@@ -241,7 +319,7 @@ export default function NewSimulationPage() {
         </div>
 
         {/* Info card */}
-        <div className="p-4 bg-indigo-500/5 border border-indigo-500/20 rounded-xl">
+        <div className="p-4 bg-teal-500/5 border border-teal-500/20 rounded-xl">
           <div className="flex items-start gap-3">
             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
               <svg

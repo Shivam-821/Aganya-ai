@@ -4,6 +4,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Navbar } from "@/components/Navbar";
+import { DisclaimerBanner } from "@/components/DisclaimerBanner";
 
 const oswald = localFont({
   src: [
@@ -68,7 +69,8 @@ export default function RootLayout({
           <ThemeProvider defaultTheme="light" storageKey="techsprint-theme">
             <div className="flex flex-col min-h-screen">
               <Navbar />
-              <main className="flex-1 pt-24 pb-12">{children}</main>
+              <main className="flex-1 pt-24 pb-20">{children}</main>
+              <DisclaimerBanner />
             </div>
           </ThemeProvider>
         </body>

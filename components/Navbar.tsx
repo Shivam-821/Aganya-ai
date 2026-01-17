@@ -81,12 +81,6 @@ export function Navbar() {
             </SignedOut>
 
             <SignedIn>
-              <Link
-                href="/dashboard"
-                className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
-              >
-                Dashboard
-              </Link>
               <UserButton
                 appearance={{
                   elements: {

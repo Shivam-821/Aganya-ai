@@ -20,6 +20,7 @@ import {
 } from "recharts";
 import { motion } from "framer-motion";
 import { Loader2 } from "lucide-react";
+import NewsWidget from "@/components/NewsWidget";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -321,8 +322,8 @@ export default function Dashboard() {
                         result.market_sentiment?.includes("Bullish")
                           ? "text-green-500"
                           : result.market_sentiment?.includes("Bearish")
-                          ? "text-amber-500"
-                          : "text-blue-500"
+                            ? "text-amber-500"
+                            : "text-blue-500"
                       }`}
                     >
                       {result.market_sentiment || "Neutral"}
@@ -354,12 +355,12 @@ export default function Dashboard() {
                           key={i}
                           className="px-3 py-1 rounded-full bg-red-500/10 text-red-500 border border-red-500/20 text-sm font-medium"
                         >
-                          ⚠️ {flag}
+                          🚨 {flag}
                         </span>
                       ))
                     ) : (
                       <span className="text-green-500 text-sm">
-                        ✅ Low Risk Detected
+                        ꪜ  Low Risk Detected
                       </span>
                     )}
                   </div>
@@ -445,17 +446,24 @@ export default function Dashboard() {
                 </div>
               </motion.div>
             ) : (
-              <div className="h-full flex flex-col items-center justify-center p-12 bg-muted/10 border border-dashed border-border rounded-2xl text-center opacity-50">
-                <div className="text-6xl mb-4">🔮</div>
-                <h3 className="text-xl font-bold">Ready to Predict</h3>
-                <p>
-                  Enter your product details to see how Policy & Seasonality
-                  affect demand.
-                </p>
+              // Dynamic Layout: Show News Widget here when no result
+              <div className="h-full">
+                <NewsWidget />
               </div>
             )}
           </div>
         </div>
+
+        {/* Dynamic Layout: Show Full Width News Widget ONLY when result exists */}
+        {result && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="w-full mb-12"
+          >
+            <NewsWidget />
+          </motion.div>
+        )}
 
         {/* BOTTOM: MARKET INSIGHTS GRID */}
         <div className="grid md:grid-cols-3 gap-8 pb-12">
@@ -532,7 +540,7 @@ export default function Dashboard() {
             className="bg-card border border-border rounded-2xl p-8 shadow-xl flex flex-col"
           >
             <h2 className="text-xl font-semibold mb-6">Sales by Category</h2>
-            <div className="flex-1 min-h-[250px]">
+            <div className="h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -574,7 +582,7 @@ export default function Dashboard() {
             </div>
           </motion.div>
 
-          {/* 3. INFLATION AREA CHART (Span 3 - Full Width) */}
+          {/* 4. INFLATION AREA CHART (Span 4 - Full Width) */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useAuth } from "@clerk/nextjs";
+import ReactMarkdown from "react-markdown";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -40,18 +41,28 @@ export default function ChatPanel({
   const { getToken } = useAuth();
 
   const handleSend = async () => {
-    if (!input.trim() && !overrideMode) return;
+    const currentInput = input;
+    if (!currentInput.trim() && !overrideMode) return;
 
-    // ... (lines 40-51)
+    // Optimistic UI Update
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: "user",
+      content:
+        currentInput || (overrideMode ? "Modified Simulation Parameters" : ""),
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setInput("");
+    setLoading(true);
 
     try {
       const token = await getToken();
       if (!token) {
-        // Add error message to chat
         setMessages((prev) => [
           ...prev,
           {
-            id: Date.now().toString(),
+            id: (Date.now() + 1).toString(),
             role: "assistant",
             content: "Authentication failed. Please sign in again.",
           },
@@ -65,8 +76,7 @@ export default function ChatPanel({
       const timeoutId = setTimeout(() => controller.abort(), 90000);
 
       const payload = overrideMode
-        ? // ... (lines 58-72) ...
-          {
+        ? {
             message: input || "Explain the changes in the forecast",
             mode: "modify_report",
             report_id: reportId,
@@ -142,7 +152,9 @@ export default function ChatPanel({
       <div className="p-4 border-b border-zinc-800/50">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="font-medium text-zinc-800 dark:text-zinc-100">AI Assistant</h3>
+            <h3 className="font-medium text-zinc-800 dark:text-zinc-100">
+              AI Assistant
+            </h3>
             <p className="text-xs text-zinc-600 dark:text-zinc-400">
               Ask questions or modify the forecast
             </p>
@@ -230,7 +242,10 @@ export default function ChatPanel({
                     : "bg-zinc-800 text-zinc-100"
                 }`}
               >
-                <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                {/* Render Markdown Content */}
+                <div className="text-sm prose prose-invert prose-p:leading-relaxed prose-pre:bg-zinc-900 prose-pre:border prose-pre:border-zinc-700 max-w-none">
+                  <ReactMarkdown>{msg.content}</ReactMarkdown>
+                </div>
 
                 {/* Modified prediction display */}
                 {msg.modifiedPrediction && (
@@ -288,7 +303,7 @@ export default function ChatPanel({
             }
             disabled={loading}
             className="flex-1 px-4 py-2.5 bg-zinc-900/50 border border-zinc-800 rounded-xl
-                     text-zinc-100 placeholder-zinc-600 text-sm
+                     text-zinc-100 placeholder-zinc-300 dark:placeholder-zinc-500 text-sm
                      focus:outline-none focus:ring-2 focus:ring-teal-500/50
                      disabled:opacity-50"
           />

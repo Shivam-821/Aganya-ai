@@ -11,6 +11,7 @@ import {
   MessageSquare,
   PieChart,
 } from "lucide-react";
+import { SignUpButton } from "@clerk/nextjs";
 
 export default function Home() {
   return (
@@ -448,12 +449,11 @@ export default function Home() {
               and maximize profits today.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-              <Link
-                href="/signup"
-                className="px-8 py-4 bg-background text-foreground rounded-xl font-bold text-lg hover:bg-background/90 transition-colors"
-              >
-                Get Started Free
-              </Link>
+              <SignUpButton mode="modal">
+                <button className="px-8 py-4 bg-background text-foreground rounded-xl font-bold text-lg hover:bg-background/90 transition-colors">
+                  Get Started Free
+                </button>
+              </SignUpButton>
             </div>
           </div>
         </div>

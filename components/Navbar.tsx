@@ -4,7 +4,13 @@ import Link from "next/link";
 import { useTheme } from "./ThemeProvider";
 import { Moon, Sun, Menu, X } from "lucide-react";
 import { useState, useEffect } from "react";
-import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
+import {
+  SignedIn,
+  SignedOut,
+  SignInButton,
+  SignUpButton,
+  UserButton,
+} from "@clerk/nextjs";
 import Image from "next/image";
 
 export function Navbar() {
@@ -67,12 +73,11 @@ export function Navbar() {
                   Sign In
                 </button>
               </SignInButton>
-              <Link
-                href="/signup"
-                className="px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300"
-              >
-                Get Started
-              </Link>
+              <SignUpButton mode="modal">
+                <button className="px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
+                  Get Started
+                </button>
+              </SignUpButton>
             </SignedOut>
 
             <SignedIn>
@@ -130,12 +135,11 @@ export function Navbar() {
                 Sign In
               </button>
             </SignInButton>
-            <Link
-              href="/signup"
-              className="w-full py-3 text-center rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors"
-            >
-              Get Started
-            </Link>
+            <SignUpButton mode="modal">
+              <button className="w-full py-3 text-center rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors">
+                Get Started
+              </button>
+            </SignUpButton>
           </SignedOut>
 
           <SignedIn>

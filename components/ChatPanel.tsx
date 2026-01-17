@@ -137,13 +137,13 @@ export default function ChatPanel({
   };
 
   return (
-    <div className="flex flex-col h-full bg-zinc-900/30 rounded-xl border border-zinc-800/50">
+    <div className="flex flex-col h-full bg-zinc-800/20 rounded-xl border border-zinc-800/50">
       {/* Header */}
       <div className="p-4 border-b border-zinc-800/50">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="font-medium text-zinc-100">AI Assistant</h3>
-            <p className="text-xs text-zinc-500">
+            <h3 className="font-medium text-zinc-800 dark:text-zinc-100">AI Assistant</h3>
+            <p className="text-xs text-zinc-600 dark:text-zinc-400">
               Ask questions or modify the forecast
             </p>
           </div>
@@ -151,8 +151,8 @@ export default function ChatPanel({
             onClick={() => setOverrideMode(!overrideMode)}
             className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${
               overrideMode
-                ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
-                : "bg-zinc-800 text-zinc-400 hover:text-zinc-100"
+                ? "bg-amber-300/20 text-amber-800 dark:text-amber-200 border border-amber-500/80 dark:border-amber-500/20"
+                : "bg-zinc-800 text-zinc-200 hover:text-zinc-100"
             }`}
           >
             {overrideMode ? "Override Mode ON" : "Modify Forecast"}
@@ -163,7 +163,7 @@ export default function ChatPanel({
       {/* Override panel */}
       {overrideMode && (
         <div className="p-4 border-b border-zinc-800/50 bg-amber-500/5">
-          <p className="text-xs text-amber-400 mb-3">
+          <p className="text-xs text-amber-800 dark:text-amber-300 mb-3">
             Adjust parameters to see how they affect the forecast:
           </p>
           <div className="grid grid-cols-2 gap-3">
@@ -176,7 +176,7 @@ export default function ChatPanel({
               },
             ].map(({ key, label, placeholder }) => (
               <div key={key}>
-                <label className="block text-xs text-zinc-400 mb-1">
+                <label className="block text-xs text-zinc-800 dark:text-zinc-100 mb-1">
                   {label}
                 </label>
                 <input
@@ -184,8 +184,7 @@ export default function ChatPanel({
                   value={overrides[key] || ""}
                   onChange={(e) => handleOverrideChange(key, e.target.value)}
                   placeholder={placeholder}
-                  className="w-full px-3 py-2 text-sm bg-zinc-900/50 border border-zinc-700 rounded-lg
-                           text-zinc-100 placeholder-zinc-600
+                  className="w-full px-3 py-2 text-sm bg-zinc-800/40 border border-zinc-700 rounded-lg text-zinc-100 placeholder-zinc-600
                            focus:outline-none focus:ring-1 focus:ring-amber-500/50"
                 />
               </div>
@@ -200,7 +199,7 @@ export default function ChatPanel({
           <div className="text-center py-8">
             <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-zinc-800/50 flex items-center justify-center">
               <svg
-                className="w-6 h-6 text-zinc-600"
+                className="w-6 h-6 text-zinc-700 dark:text-zinc-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -213,7 +212,7 @@ export default function ChatPanel({
                 />
               </svg>
             </div>
-            <p className="text-sm text-zinc-500">
+            <p className="text-sm text-zinc-600 dark:text-zinc-400">
               Ask questions about this forecast or use Override Mode to modify
               parameters
             </p>
@@ -275,7 +274,7 @@ export default function ChatPanel({
       </div>
 
       {/* Input */}
-      <div className="p-4 border-t border-zinc-800/50">
+      <div className="p-4 border-t border-zinc-800/40">
         <div className="flex items-center gap-2">
           <input
             type="text"

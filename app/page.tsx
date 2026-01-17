@@ -11,7 +11,7 @@ import {
   MessageSquare,
   PieChart,
 } from "lucide-react";
-import { SignUpButton } from "@clerk/nextjs";
+import { SignUpButton, SignedIn, SignedOut } from "@clerk/nextjs";
 
 export default function Home() {
   return (
@@ -27,7 +27,7 @@ export default function Home() {
           </h1>
 
           <p className="text-xl text-muted-foreground max-w-3xl mb-10 animate-in fade-in slide-in-from-bottom-8 duration-700 fill-mode-both delay-200">
-            The first forecasting tool tailored for Indian MSMEs. We integrate
+            The first forecasting tool tailored for Indian Startups and MSMEs. We integrate
             standard sales data with
             <span className="text-foreground font-medium"> RBI Repo Rates</span>
             ,<span className="text-foreground font-medium"> CPI Inflation</span>
@@ -449,18 +449,28 @@ export default function Home() {
               and maximize profits today.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-              <SignUpButton mode="modal">
-                <button className="px-8 py-4 bg-background text-foreground rounded-xl font-bold text-lg hover:bg-background/90 transition-colors">
-                  Get Started Free
-                </button>
-              </SignUpButton>
+              <SignedOut>
+                <SignUpButton mode="modal">
+                  <button className="px-8 py-4 bg-background text-foreground rounded-xl font-bold text-lg hover:bg-background/90 transition-colors">
+                    Get Started Free
+                  </button>
+                </SignUpButton>
+              </SignedOut>
+
+              <SignedIn>
+                <Link href="/dashboard">
+                  <button className="px-8 py-4 bg-background text-foreground rounded-xl font-bold text-lg hover:bg-background/90 transition-colors">
+                    Go to Dashboard
+                  </button>
+                </Link>
+              </SignedIn>
             </div>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="container mx-auto px-6 py-10 border-t border-border">
+      <footer className="container mx-auto px-6 py-10 pb-6 border-t border-border">
         <div className="flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-2">
             <Image

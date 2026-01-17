@@ -153,7 +153,7 @@ export default function ChatPanel({
         <div className="flex items-center justify-between">
           <div>
             <h3 className="font-medium text-zinc-800 dark:text-zinc-100">
-              AI Assistant
+              AI Assistant <strong>Bhrigu</strong>
             </h3>
             <p className="text-xs text-zinc-600 dark:text-zinc-400">
               Ask questions or modify the forecast

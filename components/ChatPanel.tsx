@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useAuth } from "@clerk/nextjs";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -36,36 +37,43 @@ export default function ChatPanel({
   const [loading, setLoading] = useState(false);
   const [overrideMode, setOverrideMode] = useState(false);
   const [overrides, setOverrides] = useState<Record<string, string>>({});
+  const { getToken } = useAuth();
 
   const handleSend = async () => {
     if (!input.trim() && !overrideMode) return;
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: "user",
-      content: overrideMode
-        ? `Override request: ${JSON.stringify(overrides)}\n${input}`
-        : input,
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
-    setInput("");
-    setLoading(true);
+    // ... (lines 40-51)
 
     try {
+      const token = await getToken();
+      if (!token) {
+        // Add error message to chat
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: Date.now().toString(),
+            role: "assistant",
+            content: "Authentication failed. Please sign in again.",
+          },
+        ]);
+        setLoading(false);
+        return;
+      }
+
       const controller = new AbortController();
       // Longer timeout for AI responses (90s for Gemini + ML model)
       const timeoutId = setTimeout(() => controller.abort(), 90000);
 
       const payload = overrideMode
-        ? {
+        ? // ... (lines 58-72) ...
+          {
             message: input || "Explain the changes in the forecast",
             mode: "modify_report",
             report_id: reportId,
             overrides: Object.fromEntries(
               Object.entries(overrides)
                 .filter(([, v]) => v !== "")
-                .map(([k, v]) => [k, parseFloat(v) || v])
+                .map(([k, v]) => [k, parseFloat(v) || v]),
             ),
           }
         : {
@@ -76,9 +84,11 @@ export default function ChatPanel({
 
       const res = await fetch(`${API_URL}/chat`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify(payload),
-        credentials: "include",
         signal: controller.signal,
       });
       clearTimeout(timeoutId);
@@ -185,7 +195,7 @@ export default function ChatPanel({
       )}
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-50 max-h-100">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-[200px] max-h-[400px]">
         {messages.length === 0 ? (
           <div className="text-center py-8">
             <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-zinc-800/50 flex items-center justify-center">
@@ -212,9 +222,7 @@ export default function ChatPanel({
           messages.map((msg) => (
             <div
               key={msg.id}
-              className={`flex ${
-                msg.role === "user" ? "justify-end" : "justify-start"
-              }`}
+              className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
             >
               <div
                 className={`max-w-[85%] rounded-xl px-4 py-3 ${

@@ -40,7 +40,7 @@ export default function Home() {
 
           <div className="flex flex-col sm:flex-row gap-4 items-center animate-in fade-in slide-in-from-bottom-8 duration-700 fill-mode-both delay-300">
             <Link
-              href="/signup"
+              href="/dashboard"
               className="px-8 py-4 rounded-xl bg-primary text-primary-foreground font-semibold text-lg hover:bg-primary/90 shadow-xl shadow-primary/20 hover:-translate-y-1 transition-all duration-300 w-full sm:w-auto flex items-center justify-center gap-2"
             >
               Start Forecasting <ArrowRight className="w-5 h-5" />
@@ -117,7 +117,7 @@ export default function Home() {
                         className="w-full bg-linear-to-t from-teal-500/20 to-teal-500 rounded-t-sm"
                         style={{ height: `${h}%` }}
                       ></div>
-                    )
+                    ),
                   )}
                   {/* Overlay Line */}
                   <svg
@@ -438,7 +438,7 @@ export default function Home() {
       {/* CTA Section */}
       <section className="container mx-auto px-6 py-24 mb-12">
         <div className="rounded-3xl bg-primary text-primary-foreground p-12 md:p-20 text-center relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-full bg-[url('https://grainy-linears.vercel.app/noise.svg')] opacity-20"></div>
+          <div className="absolute top-0 left-0 w-full h-full bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iNDAwIj48ZmlsdGVyIGlkPSJnoiPjZmVUdHVyYnVsZW5jZSB0eXBlPSJmcmFjdGFsTm9pc2UiIGJhc2BGcmVxdWVuY3k9IjAuNjUiIG51bU9jdGF2ZXM9IjMiIHN0aXRjaFRpbGVzPSJzdGl0Y2giLz48L2ZpbHRlcj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWx0ZXI9InVybCgjZykiIG9wYWNpdHk9IjAuNCIvPjwvc3ZnPg==')] opacity-20"></div>
           <div className="relative z-10 max-w-3xl mx-auto space-y-8">
             <h2 className="text-4xl md:text-5xl font-bold">
               Stop Guessing. Start Predicting.
@@ -460,14 +460,14 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="container mx-auto px-6 py-12 border-t border-border">
+      <footer className="container mx-auto px-6 py-10 border-t border-border">
         <div className="flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-2">
             <Image
               src="/logo.png"
               alt="Aganya AI Logo"
-              width={32}
-              height={32}
+              width={37}
+              height={37}
               className="rounded-lg"
             />
             <span className="font-bold text-xl">Aganya AI</span>

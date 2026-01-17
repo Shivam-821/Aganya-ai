@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import ChatPanel from "@/components/ChatPanel";
+import { useAuth } from "@clerk/nextjs";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -39,6 +40,7 @@ export default function SimulationDetailPage() {
   const params = useParams();
   const router = useRouter();
   const reportId = params.id as string;
+  const { getToken, isLoaded, isSignedIn } = useAuth();
 
   const [report, setReport] = useState<Report | null>(null);
   const [loading, setLoading] = useState(true);
@@ -48,11 +50,22 @@ export default function SimulationDetailPage() {
   useEffect(() => {
     const fetchReport = async () => {
       try {
+        if (!isLoaded || !isSignedIn) return;
+
+        const token = await getToken();
+        if (!token) {
+          setError("Authentication failed");
+          setLoading(false);
+          return;
+        }
+
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
 
         const res = await fetch(`${API_URL}/reports/${reportId}`, {
-          credentials: "include",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
           signal: controller.signal,
         });
         clearTimeout(timeoutId);

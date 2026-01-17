@@ -9,13 +9,14 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@clerk/nextjs": "^6.36.8",
     "@emailjs/browser": "^4.4.1",
-    "better-auth": "^1.4.13",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "framer-motion": "^12.26.2",
     "lucide-react": "^0.562.0",
     "mongodb": "^7.0.0",
+    "motion": "^12.26.2",
     "next": "16.1.2",
     "react": "19.2.3",
     "react-dom": "19.2.3",

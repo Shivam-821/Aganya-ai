@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useAuth } from "@clerk/nextjs";
 
 interface Report {
   id: string;
@@ -34,25 +35,38 @@ export default function SimulationsPage() {
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { getToken, isLoaded, isSignedIn } = useAuth();
 
   useEffect(() => {
-    fetchReports();
-  }, []);
+    if (isLoaded && isSignedIn) {
+      fetchReports();
+    }
+  }, [isLoaded, isSignedIn]);
 
   const fetchReports = async () => {
     try {
+      const token = await getToken();
+      if (!token) {
+        setError("Failed to get authentication token");
+        setLoading(false);
+        return;
+      }
+
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
 
       const res = await fetch(`${API_URL}/reports`, {
-        credentials: "include",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
         signal: controller.signal,
       });
       clearTimeout(timeoutId);
 
       if (res.status === 401) {
         // Redirect to login if unauthorized
-        window.location.href = "/login";
+        // window.location.href = "/login";
+        setError("Unauthorized: Backend did not accept the session.");
         return;
       }
 

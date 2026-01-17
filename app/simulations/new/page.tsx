@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -19,6 +20,7 @@ export default function NewSimulationPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { getToken } = useAuth();
 
   const [formData, setFormData] = useState({
     product_name: "",
@@ -35,6 +37,13 @@ export default function NewSimulationPage() {
     setError(null);
 
     try {
+      const token = await getToken();
+      if (!token) {
+        setError("Failed to get authentication token");
+        setLoading(false);
+        return;
+      }
+
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout for ML prediction
 
@@ -58,15 +67,17 @@ export default function NewSimulationPage() {
             sessionId: "debug-session",
             hypothesisId: "F",
           }),
-        }
+        },
       ).catch(() => {});
       // #endregion
 
       const res = await fetch(`${API_URL}/reports`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify(payload),
-        credentials: "include",
         signal: controller.signal,
       });
       clearTimeout(timeoutId);
@@ -85,7 +96,7 @@ export default function NewSimulationPage() {
             sessionId: "debug-session",
             hypothesisId: "F",
           }),
-        }
+        },
       ).catch(() => {});
       // #endregion
 
@@ -109,7 +120,7 @@ export default function NewSimulationPage() {
             sessionId: "debug-session",
             hypothesisId: "F",
           }),
-        }
+        },
       ).catch(() => {});
       // #endregion
 
@@ -136,12 +147,12 @@ export default function NewSimulationPage() {
             sessionId: "debug-session",
             hypothesisId: "F",
           }),
-        }
+        },
       ).catch(() => {});
       // #endregion
       if (err instanceof Error && err.name === "AbortError") {
         setError(
-          "Request timed out. The prediction is taking longer than expected."
+          "Request timed out. The prediction is taking longer than expected.",
         );
       } else {
         setError("Failed to connect to server");
@@ -152,7 +163,7 @@ export default function NewSimulationPage() {
   };
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     setFormData((prev) => ({
       ...prev,

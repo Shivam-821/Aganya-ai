@@ -22,16 +22,19 @@ interface Message {
   role: "user" | "assistant";
   content: string;
   modifiedPrediction?: Prediction;
+  modifiedInput?: Record<string, any>;
 }
 
 interface ChatPanelProps {
   reportId: string;
   onPredictionUpdate?: (prediction: Prediction) => void;
+  onSaveOverride?: (message: Message) => void;
 }
 
 export default function ChatPanel({
   reportId,
   onPredictionUpdate,
+  onSaveOverride,
 }: ChatPanelProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -110,6 +113,7 @@ export default function ChatPanel({
         role: "assistant",
         content: data.reply || "Sorry, I couldn't process that request.",
         modifiedPrediction: data.modified_prediction,
+        modifiedInput: overrideMode ? overrides : undefined,
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
@@ -201,6 +205,30 @@ export default function ChatPanel({
                 />
               </div>
             ))}
+            {/* Model Selection */}
+            <div className="col-span-2">
+              <label className="block text-xs text-zinc-800 dark:text-zinc-100 mb-1">
+                AI Model Engine
+              </label>
+              <select
+                value={overrides["model_type"] || ""}
+                onChange={(e) =>
+                  handleOverrideChange("model_type", e.target.value)
+                }
+                className="w-full px-3 py-2 text-sm bg-zinc-800/40 border border-zinc-700 rounded-lg text-zinc-100 
+                         focus:outline-none focus:ring-1 focus:ring-amber-500/50 appearance-none"
+              >
+                <option value="" disabled className="text-zinc-500">
+                  Select Model (Optional)
+                </option>
+                <option value="advanced" className="text-black">
+                  ⚡ Advanced AI (Stacking)
+                </option>
+                <option value="explainable" className="text-black">
+                  🧠 Explainable AI (Ridge)
+                </option>
+              </select>
+            </div>
           </div>
         </div>
       )}
@@ -250,9 +278,20 @@ export default function ChatPanel({
                 {/* Modified prediction display */}
                 {msg.modifiedPrediction && (
                   <div className="mt-3 pt-3 border-t border-zinc-700/50">
-                    <p className="text-xs text-emerald-400 mb-2">
-                      New Prediction:
-                    </p>
+                    <div className="flex justify-between items-center mb-2">
+                      <p className="text-xs text-emerald-400">
+                        New Prediction:
+                      </p>
+                      {onSaveOverride && (
+                        <button
+                          onClick={() => onSaveOverride(msg)}
+                          className="px-2 py-1 text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 rounded hover:bg-emerald-500/30 transition-colors"
+                        >
+                          Save & Override
+                        </button>
+                      )}
+                    </div>
+
                     <div className="grid grid-cols-2 gap-2 text-xs">
                       <div>
                         <span className="text-zinc-400">Sales:</span>{" "}

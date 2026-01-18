@@ -5,7 +5,7 @@ import { motion } from "motion/react";
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background text-foreground p-4 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-background text-foreground p-4 pt-0 relative overflow-hidden">
       {/* Background Gradients */}
       <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-primary/20 blur-[120px] rounded-full pointer-events-none" />
       <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-secondary/20 blur-[120px] rounded-full pointer-events-none" />

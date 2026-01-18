@@ -2,9 +2,22 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import ChatPanel from "@/components/ChatPanel";
 import { useAuth, useUser } from "@clerk/nextjs";
+import { ConfirmationModal } from "@/components/ConfirmationModal";
 import ExportButton from "@/components/ExportButton";
+import { InfoTooltip } from "@/components/InfoTooltip";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip as RechartsTooltip,
+  ResponsiveContainer,
+  CartesianGrid,
+  Cell,
+} from "recharts";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -18,6 +31,7 @@ interface Report {
     unit_price: number;
     current_inventory: number;
     prediction_date: string;
+    model_type?: string;
   };
   output: {
     forecast_sales: number;
@@ -28,6 +42,7 @@ interface Report {
       repo_rate_effect: string;
       inflation_effect: string;
     };
+    explanation?: Record<string, number>;
   };
   created_at: string;
   modified_at: string | null;
@@ -47,6 +62,7 @@ export default function SimulationDetailPage() {
   const [report, setReport] = useState<Report | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [successModalOpen, setSuccessModalOpen] = useState(false);
   const [expandedCards, setExpandedCards] = useState<ExpandedCards>({});
 
   useEffect(() => {
@@ -91,7 +107,7 @@ export default function SimulationDetailPage() {
     };
 
     fetchReport();
-  }, [reportId]);
+  }, [reportId, isLoaded, isSignedIn, getToken]);
 
   const toggleCard = (key: string) => {
     setExpandedCards((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -121,6 +137,107 @@ export default function SimulationDetailPage() {
         modified_at: new Date().toISOString(),
       });
     }
+  };
+
+  const handleSaveOverride = async (message: any) => {
+    if (!report || !message.modifiedInput || !message.modifiedPrediction)
+      return;
+
+    try {
+      setLoading(true);
+      const token = await getToken();
+
+      // Merge current inputs with overrides
+      const updatedInput = {
+        ...report.input,
+        ...message.modifiedInput,
+        // Ensure numbers are numbers
+        unit_price: Number(
+          message.modifiedInput.unit_price || report.input.unit_price,
+        ),
+        current_inventory: Number(
+          message.modifiedInput.current_inventory ||
+            report.input.current_inventory,
+        ),
+      };
+
+      const res = await fetch(`${API_URL}/reports/${report.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(updatedInput),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setReport(data.data);
+        setSuccessModalOpen(true);
+        // alert("Simulation updated successfully!");
+        window.location.reload();
+      } else {
+        alert("Failed to update simulation: " + data.error);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error updating simulation");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Prepare Explanation Data
+  const explanationData = report?.output.explanation
+    ? Object.entries(report.output.explanation)
+        .map(([key, value]) => ({
+          feature: key,
+          impact: value,
+          formattedImpact: value.toFixed(4),
+        }))
+        .filter((item) => Math.abs(item.impact) > 0.01) // Filter negligible
+        .sort((a, b) => Math.abs(b.impact) - Math.abs(a.impact)) // Sort by magnitude
+    : [];
+
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-popover border border-border p-3 rounded-lg shadow-lg">
+          <p className="font-medium text-popover-foreground">{label}</p>
+          <p
+            className={`text-sm ${
+              payload[0].value >= 0 ? "text-emerald-500" : "text-rose-500"
+            }`}
+          >
+            Impact: {payload[0].value > 0 ? "+" : ""}
+            {Number(payload[0].value).toFixed(4)}
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  const riskExplanations: Record<string, string> = {
+    "High Waste Risk":
+      "Current inventory significantly exceeds forecasted demand. Consider promotional pricing or reducing future orders to minimize dead stock losses.",
+    "Diwali Demand Spike Active":
+      "The prediction date falls within the Diwali shopping window (Dussehra to Diwali+3 days). Expect 20-40% higher demand than normal periods.",
+    "Wedding Season Boost Active":
+      "Wedding season months (Nov-Feb, May-Jun) typically see elevated demand for fashion and jewelry categories. Factor in a 15-30% boost.",
+    "High Interest Rate Drag detected":
+      "RBI Repo Rate above 6.25% creates financing headwinds for big-ticket items like automotive and home goods. Expect 10-20% demand reduction.",
+  };
+
+  const policyExplanations: Record<string, string> = {
+    "High Interest Rates reduing Demand":
+      "When RBI Repo Rate exceeds 6.25%, borrowing costs increase, reducing consumer spending on credit-dependent purchases.",
+    "Low Interest Rates boosting Demand":
+      "RBI Repo Rate below 6.0% makes credit cheaper, encouraging consumer spending especially on high-value items.",
+    "High Inflation reducing Purchasing Power":
+      "CPI above 6% erodes real income, causing consumers to prioritize essentials over discretionary spending.",
+    Neutral:
+      "Current policy conditions are within normal ranges and not significantly impacting demand patterns.",
   };
 
   if (loading) {
@@ -178,28 +295,6 @@ export default function SimulationDetailPage() {
     );
   }
 
-  const riskExplanations: Record<string, string> = {
-    "High Waste Risk":
-      "Current inventory significantly exceeds forecasted demand. Consider promotional pricing or reducing future orders to minimize dead stock losses.",
-    "Diwali Demand Spike Active":
-      "The prediction date falls within the Diwali shopping window (Dussehra to Diwali+3 days). Expect 20-40% higher demand than normal periods.",
-    "Wedding Season Boost Active":
-      "Wedding season months (Nov-Feb, May-Jun) typically see elevated demand for fashion and jewelry categories. Factor in a 15-30% boost.",
-    "High Interest Rate Drag detected":
-      "RBI Repo Rate above 6.25% creates financing headwinds for big-ticket items like automotive and home goods. Expect 10-20% demand reduction.",
-  };
-
-  const policyExplanations: Record<string, string> = {
-    "High Interest Rates reduing Demand":
-      "When RBI Repo Rate exceeds 6.25%, borrowing costs increase, reducing consumer spending on credit-dependent purchases.",
-    "Low Interest Rates boosting Demand":
-      "RBI Repo Rate below 6.0% makes credit cheaper, encouraging consumer spending especially on high-value items.",
-    "High Inflation reducing Purchasing Power":
-      "CPI above 6% erodes real income, causing consumers to prioritize essentials over discretionary spending.",
-    Neutral:
-      "Current policy conditions are within normal ranges and not significantly impacting demand patterns.",
-  };
-
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
       {/* Header */}
@@ -256,6 +351,38 @@ export default function SimulationDetailPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main content */}
         <div className="lg:col-span-2 space-y-6">
+          {/* Forecast Period Disclaimer */}
+          <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+            <p className="text-sm text-blue-400 flex items-start gap-2">
+              <svg
+                className="w-5 h-5 mt-0.5 flex-shrink-0"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <span>
+                <strong className="font-semibold">
+                  Forecast Period Notice:
+                </strong>{" "}
+                This simulation forecasts demand for approximately 30 days
+                around{" "}
+                {new Date(report.input.prediction_date).toLocaleDateString(
+                  "en-IN",
+                  { month: "long", year: "numeric" },
+                )}
+                , using macro-economic indicators (Repo Rate, CPI, GDP)
+                applicable to that period.
+              </span>
+            </p>
+          </div>
+
           {/* Key Metrics */}
           <div className="grid grid-cols-3 gap-4">
             <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
@@ -276,8 +403,13 @@ export default function SimulationDetailPage() {
               </div>
             </div>
             <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
-              <div className="text-sm text-muted-foreground mb-1">
+              <div className="text-sm text-muted-foreground mb-1 flex items-center">
                 Potential Waste
+                <InfoTooltip
+                  title="Potential Waste (Holding Cost)"
+                  description="This represents the estimated holding cost for excess inventory that may not sell. It's calculated as 20% of the total value of unsold units, accounting for storage, insurance, depreciation, and opportunity costs."
+                  formula="Excess Units × Unit Price × 0.2 (20% holding cost)"
+                />
               </div>
               <div
                 className={`text-2xl font-bold ${
@@ -296,7 +428,7 @@ export default function SimulationDetailPage() {
             <h3 className="font-medium text-foreground mb-4">
               Input Parameters
             </h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
               <div>
                 <div className="text-xs text-muted-foreground mb-1">
                   Unit Price
@@ -327,8 +459,81 @@ export default function SimulationDetailPage() {
                   {report.input.region}
                 </div>
               </div>
+              <div>
+                <div className="text-xs text-muted-foreground mb-1">
+                  Model Engine
+                </div>
+                <div className="text-foreground font-medium capitalize">
+                  {report.input.model_type || "Advanced"}
+                </div>
+              </div>
             </div>
           </div>
+
+          {/* Explanation Chart (If Available) */}
+          {explanationData.length > 0 && (
+            <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
+              <h3 className="font-medium text-foreground mb-4 flex items-center gap-2">
+                <svg
+                  className="w-5 h-5 text-indigo-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                  />
+                </svg>
+                What Drives this Forecast? (Explainable AI)
+              </h3>
+              <div className="h-[300px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={explanationData}
+                    layout="vertical"
+                    margin={{ top: 5, right: 30, left: 100, bottom: 5 }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      horizontal={false}
+                      stroke="hsl(var(--border))"
+                      opacity={0.5}
+                    />
+                    <XAxis type="number" hide />
+                    <YAxis
+                      type="category"
+                      dataKey="feature"
+                      tick={{
+                        fill: "hsl(var(--muted-foreground))",
+                        fontSize: 12,
+                      }}
+                      width={120}
+                    />
+                    <RechartsTooltip
+                      content={<CustomTooltip />}
+                      cursor={{ fill: "hsl(var(--muted)/0.2)" }}
+                    />
+                    <Bar dataKey="impact" radius={[0, 4, 4, 0]}>
+                      {explanationData.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={entry.impact >= 0 ? "#10b981" : "#f43f5e"}
+                        />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2 italic border-t pt-2 border-border/50">
+                * Shows how each factor positively (Green) or negatively (Red)
+                contributes to the final demand value relative to the base
+                trend.
+              </p>
+            </div>
+          )}
 
           {/* Risk Flags - Expandable */}
           {report.output.risk_flags.length > 0 && (
@@ -523,10 +728,20 @@ export default function SimulationDetailPage() {
             <ChatPanel
               reportId={reportId}
               onPredictionUpdate={handlePredictionUpdate}
+              onSaveOverride={handleSaveOverride}
             />
           </div>
         </div>
       </div>
+      <ConfirmationModal
+        isOpen={successModalOpen}
+        onClose={() => setSuccessModalOpen(false)}
+        onConfirm={() => setSuccessModalOpen(false)}
+        title="Success"
+        message="Simulation updated successfully!"
+        confirmText="OK"
+        showCancel={false}
+      />
     </div>
   );
 }

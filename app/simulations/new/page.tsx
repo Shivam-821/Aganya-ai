@@ -14,7 +14,21 @@ const CATEGORIES = [
   "Grocery",
   "Home",
 ];
-const REGIONS = ["Tier-1", "Tier-2", "Tier-3", "Rural"];
+
+// Valid States from Backend
+const STATES = [
+  "Delhi",
+  "Uttar Pradesh",
+  "Punjab",
+  "Haryana",
+  "Maharashtra",
+  "Gujarat",
+  "Karnataka",
+  "Tamil Nadu",
+  "Andhra Pradesh",
+  "Bihar",
+  "West Bengal",
+];
 
 export default function NewSimulationPage() {
   const router = useRouter();
@@ -25,7 +39,8 @@ export default function NewSimulationPage() {
   const [formData, setFormData] = useState({
     product_name: "",
     category: "Fashion",
-    region: "Tier-1",
+    state: "Delhi",
+    model_type: "advanced",
     unit_price: "",
     current_inventory: "",
     prediction_date: new Date().toISOString().split("T")[0],
@@ -45,31 +60,15 @@ export default function NewSimulationPage() {
       }
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout for ML prediction
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout
 
+      // Map state to region implicit logic (or backend handles it)
+      // We send state and model_type now
       const payload = {
         ...formData,
         unit_price: parseFloat(formData.unit_price),
         current_inventory: parseInt(formData.current_inventory),
       };
-
-      // #region agent log
-      fetch(
-        "http://127.0.0.1:7243/ingest/fb5f8066-a7b3-41e4-a85d-332644014073",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            location: "new/page.tsx:submit",
-            message: "Sending request",
-            data: { api_url: API_URL, payload },
-            timestamp: Date.now(),
-            sessionId: "debug-session",
-            hypothesisId: "F",
-          }),
-        },
-      ).catch(() => {});
-      // #endregion
 
       const res = await fetch(`${API_URL}/reports`, {
         method: "POST",
@@ -82,47 +81,7 @@ export default function NewSimulationPage() {
       });
       clearTimeout(timeoutId);
 
-      // #region agent log
-      fetch(
-        "http://127.0.0.1:7243/ingest/fb5f8066-a7b3-41e4-a85d-332644014073",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            location: "new/page.tsx:response",
-            message: "Got response",
-            data: { status: res.status, ok: res.ok },
-            timestamp: Date.now(),
-            sessionId: "debug-session",
-            hypothesisId: "F",
-          }),
-        },
-      ).catch(() => {});
-      // #endregion
-
       const data = await res.json();
-
-      // #region agent log
-      fetch(
-        "http://127.0.0.1:7243/ingest/fb5f8066-a7b3-41e4-a85d-332644014073",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            location: "new/page.tsx:data",
-            message: "Parsed JSON",
-            data: {
-              success: data.success,
-              hasData: !!data.data,
-              error: data.error,
-            },
-            timestamp: Date.now(),
-            sessionId: "debug-session",
-            hypothesisId: "F",
-          }),
-        },
-      ).catch(() => {});
-      // #endregion
 
       if (data.success) {
         router.push(`/simulations/${data.data.id}`);
@@ -130,26 +89,6 @@ export default function NewSimulationPage() {
         setError(data.error || "Failed to create simulation");
       }
     } catch (err) {
-      // #region agent log
-      fetch(
-        "http://127.0.0.1:7243/ingest/fb5f8066-a7b3-41e4-a85d-332644014073",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            location: "new/page.tsx:catch",
-            message: "Request failed",
-            data: {
-              error: err instanceof Error ? err.message : String(err),
-              name: err instanceof Error ? err.name : "unknown",
-            },
-            timestamp: Date.now(),
-            sessionId: "debug-session",
-            hypothesisId: "F",
-          }),
-        },
-      ).catch(() => {});
-      // #endregion
       if (err instanceof Error && err.name === "AbortError") {
         setError(
           "Request timed out. The prediction is taking longer than expected.",
@@ -210,7 +149,7 @@ export default function NewSimulationPage() {
           />
         </div>
 
-        {/* Category & Region */}
+        {/* Category & State */}
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-muted-foreground mb-2">
@@ -239,28 +178,71 @@ export default function NewSimulationPage() {
 
           <div>
             <label className="block text-sm font-medium text-muted-foreground mb-2">
-              Region
+              Target State
             </label>
             <select
-              name="region"
-              value={formData.region}
+              name="state"
+              value={formData.state}
               onChange={handleChange}
               className="w-full px-4 py-3 bg-muted/50 border border-border rounded-xl 
                        text-foreground 
                        focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary
                        transition-all appearance-none cursor-pointer"
             >
-              {REGIONS.map((region) => (
-                <option
-                  key={region}
-                  value={region}
-                  className="bg-card text-foreground"
-                >
-                  {region}
+              {STATES.map((s) => (
+                <option key={s} value={s} className="bg-card text-foreground">
+                  {s}
                 </option>
               ))}
             </select>
           </div>
+        </div>
+
+        {/* MODEL SELECTION */}
+        <div className="p-4 bg-muted/30 rounded-xl border border-border relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+          <label className="block text-sm font-medium text-foreground mb-3">
+            AI Model Engine
+          </label>
+          <div className="grid grid-cols-2 gap-3 relative z-10">
+            <button
+              type="button"
+              onClick={() =>
+                setFormData((prev) => ({ ...prev, model_type: "advanced" }))
+              }
+              className={`p-3 rounded-xl text-left border transition-all ${
+                formData.model_type === "advanced"
+                  ? "bg-primary/10 border-primary text-primary shadow-sm"
+                  : "bg-background border-border text-muted-foreground hover:bg-muted"
+              }`}
+            >
+              <div className="font-semibold text-sm">⚡ Advanced AI</div>
+              <div className="text-[10px] opacity-70 mt-1">
+                Maximum Accuracy (Stacking)
+              </div>
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                setFormData((prev) => ({ ...prev, model_type: "explainable" }))
+              }
+              className={`p-3 rounded-xl text-left border transition-all ${
+                formData.model_type === "explainable"
+                  ? "bg-primary/10 border-primary text-primary shadow-sm"
+                  : "bg-background border-border text-muted-foreground hover:bg-muted"
+              }`}
+            >
+              <div className="font-semibold text-sm">🧠 Explainable</div>
+              <div className="text-[10px] opacity-70 mt-1">
+                See Impact Drivers (Ridge)
+              </div>
+            </button>
+          </div>
+          <p className="text-xs text-muted-foreground mt-3 relative z-10">
+            {formData.model_type === "advanced"
+              ? "Our Stacking Ensemble model combines XGBoost and LightGBM for state-of-the-art accuracy."
+              : "The Ridge Regression model provides coefficient-based explanations for transparency."}
+          </p>
         </div>
 
         {/* Price & Inventory */}

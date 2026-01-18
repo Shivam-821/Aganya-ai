@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
+import { ConfirmationModal } from "@/components/ConfirmationModal";
 
 interface Report {
   id: string;
@@ -34,7 +35,13 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 export default function SimulationsPage() {
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Modal State
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
+
   const { getToken, isLoaded, isSignedIn } = useAuth();
 
   useEffect(() => {
@@ -104,6 +111,40 @@ export default function SimulationsPage() {
       currency: "INR",
       maximumFractionDigits: 0,
     }).format(amount);
+  };
+
+  const handleDelete = (e: React.MouseEvent, id: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setSelectedReportId(id);
+    setModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!selectedReportId) return;
+    setDeleteLoading(true);
+    try {
+      const token = await getToken();
+      const res = await fetch(`${API_URL}/reports/${selectedReportId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (res.ok) {
+        setReports((prev) => prev.filter((r) => r.id !== selectedReportId));
+      } else {
+        alert("Failed to delete simulation");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error deleting simulation");
+    } finally {
+      setModalOpen(false);
+      setSelectedReportId(null);
+      setDeleteLoading(false);
+    }
   };
 
   if (loading) {
@@ -189,14 +230,39 @@ export default function SimulationsPage() {
               {/* Product info */}
               <div className="mb-6">
                 <div className="flex justify-between items-start mb-2">
-                  <h3 className="text-lg font-semibold text-foreground truncate pr-4">
-                    {report.input.product_name}
-                  </h3>
-                  <span className="px-2.5 py-1 text-xs font-medium bg-muted text-muted-foreground rounded-full">
-                    {report.input.category}
-                  </span>
+                  <div className="pr-8">
+                    <h3 className="text-lg font-semibold text-foreground truncate">
+                      {report.input.product_name}
+                    </h3>
+                    <span className="px-2.5 py-1 text-xs font-medium bg-muted text-muted-foreground rounded-full mt-1 inline-block">
+                      {report.input.category}
+                    </span>
+                  </div>
+
+                  {/* Delete Action */}
+                  <div className="absolute top-4 right-4 z-10">
+                    <button
+                      onClick={(e) => handleDelete(e, report.id)}
+                      className="p-2 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-full transition-colors opacity-0 group-hover:opacity-100"
+                      title="Delete Simulation"
+                    >
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
-                <p className="text-sm text-muted-foreground flex items-center gap-1">
+                <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
                   {report.input.region} Region
                 </p>
               </div>
@@ -248,6 +314,18 @@ export default function SimulationsPage() {
           ))}
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onConfirm={confirmDelete}
+        title="Delete Simulation?"
+        message="This action cannot be undone. Are you sure you want to permanently delete this forecast?"
+        confirmText="Delete"
+        isDestructive={true}
+        loading={deleteLoading}
+      />
     </div>
   );
 }
